@@ -3,7 +3,7 @@ import ollama
 import time
 
 # Configuración de la página
-st.set_page_config(page_title="Smart Answer Engine", page_icon="🤖", layout="wide")
+st.set_page_config(page_title="Smart Answer Engine", page_icon="Lab_Exercise", layout="wide")
 
 # Estilos personalizados (Rich Aesthetics)
 st.markdown("""
@@ -28,7 +28,7 @@ st.markdown("""
     </style>
     """, unsafe_allow_html=True)
 
-st.title("🤖 Smart Answer Engine")
+st.title(" Smart Answer Engine")
 st.caption("Sistema de respuestas multi-paso utilizando LLMs locales (Ollama)")
 
 # Sidebar para configuración
@@ -64,21 +64,21 @@ if st.button("Procesar Consulta"):
                 analysis_prompt = f"Analiza esta consulta técnica. Identifica el objetivo principal, los conceptos clave y el formato de respuesta ideal. Consulta: {query}"
                 analysis = query_ollama(analysis_prompt, model_name)
                 st.markdown(f"**Resultado del Análisis:**\n\n{analysis}")
-                status.update(label="Fase 1 completada ✅", state="complete", expanded=False)
+                status.update(label="Fase 1 completada ", state="complete", expanded=False)
             
             # FASE 2: GENERACIÓN DE RESPUESTA
             with st.status("Fase 2: Generando respuesta principal...", expanded=True) as status:
                 gen_prompt = f"Basándote en este análisis preliminar: '{analysis}', genera una respuesta detallada y precisa a la siguiente consulta: {query}"
                 draft_answer = query_ollama(gen_prompt, model_name)
                 st.markdown(f"**Borrador de Respuesta:**\n\n{draft_answer}")
-                status.update(label="Fase 2 completada ✅", state="complete", expanded=False)
+                status.update(label="Fase 2 completada ", state="complete", expanded=False)
             
             # FASE 3: REFINAMIENTO (VALOR AÑADIDO)
             with st.status("Fase 3: Refinando y puliendo la respuesta...", expanded=True) as status:
                 refine_prompt = f"Revisa críticamente tu respuesta anterior: '{draft_answer}'. Corrige posibles imprecisiones, mejora la estructura y asegúrate de que sea lo más clara posible. Proporciona la versión FINAL pulida."
                 final_answer = query_ollama(refine_prompt, model_name)
                 st.markdown(f"**Proceso de Refinamiento:** Se han optimizado la estructura y claridad.")
-                status.update(label="Fase 3 completada ✅", state="complete", expanded=False)
+                status.update(label="Fase 3 completada ", state="complete", expanded=False)
             
             total_time = time.time() - start_time
             
@@ -96,3 +96,4 @@ if st.button("Procesar Consulta"):
 # Footer
 st.markdown("---")
 st.caption("Desarrollado para Lab_Exercises_3 - Procesamiento del Lenguaje Natural")
+#
