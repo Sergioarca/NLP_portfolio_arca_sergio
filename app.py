@@ -1,99 +1,106 @@
 import streamlit as st
-import ollama
-import time
+import requests
+import json
 
-# Configuración de la página
-st.set_page_config(page_title="Smart Answer Engine", page_icon="Lab_Exercise", layout="wide")
+# Configuración premium de Streamlit
+st.set_page_config(page_title="Smart Chat Assistant", page_icon="💬", layout="wide")
 
-# Estilos personalizados (Rich Aesthetics)
 st.markdown("""
-    <style>
-    .main {
-        background-color: #0e1117;
+<style>
+    .stChatFloatingInputContainer { background-color: #0e1117; }
+    .stChatMessage { border-radius: 15px; margin-bottom: 10px; }
+    .phase-badge { 
+        font-size: 0.8rem; 
+        background-color: #3b3b3b; 
+        padding: 2px 8px; 
+        border-radius: 10px; 
+        color: #ddd; 
+        margin-right: 5px;
     }
-    .stButton>button {
-        width: 100%;
-        border-radius: 5px;
-        height: 3em;
-        background-color: #ff4b4b;
-        color: white;
+</style>
+""", unsafe_allow_html=True)
+
+st.title("💬 Smart Chat Assistant")
+st.caption("Conversación con Pipeline Inteligente (Llama 3.2)")
+
+# Configuración de API
+OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
+
+def stream_ollama_chat(messages, model):
+    """Generador para interactuar con la API de Chat de Ollama con streaming"""
+    payload = {
+        "model": model,
+        "messages": messages,
+        "stream": True
     }
-    .step-container {
-        padding: 15px;
-        border-radius: 10px;
-        background-color: #1a1c24;
-        margin-bottom: 10px;
-        border: 1px solid #30363d;
-    }
-    </style>
-    """, unsafe_allow_html=True)
-
-st.title(" Smart Answer Engine")
-st.caption("Sistema de respuestas multi-paso utilizando LLMs locales (Ollama)")
-
-# Sidebar para configuración
-with st.sidebar:
-    st.header("Configuración")
-    model_name = st.selectbox("Modelo Local", ["qwen2.5-coder:14b"], index=0)
-    st.info("Este motor utiliza un pipeline de 3 fases: Análisis, Generación y Refinamiento.")
-
-# Función para interactuar con Ollama
-def query_ollama(prompt, model):
     try:
-        response = ollama.chat(model=model, messages=[
-            {'role': 'user', 'content': prompt},
-        ])
-        return response['message']['content']
+        response = requests.post(OLLAMA_CHAT_URL, json=payload, stream=True, timeout=60)
+        if response.status_code == 200:
+            for line in response.iter_lines():
+                if line:
+                    chunk = json.loads(line)
+                    if not chunk.get("done"):
+                        yield chunk.get("message", {}).get("content", "")
+        else:
+            yield f"Error de API: {response.status_code}"
     except Exception as e:
-        return f"Error: {str(e)}"
+        yield f"Error de conexión: {str(e)}"
 
-# Área de entrada
-query = st.text_area("Introduce tu pregunta o consulta:", placeholder="Ej: ¿Cómo funciona el algoritmo de búsqueda A*?", height=100)
+# Inicialización de estado de sesión para el historial
+if "messages" not in st.session_state:
+    st.session_state.messages = []
 
-if st.button("Procesar Consulta"):
-    if not query:
-        st.warning("Por favor, introduce una consulta.")
-    else:
-        # Contenedor para el pipeline
-        with st.container():
-            st.write("---")
-            
-            # FASE 1: ANÁLISIS
-            with st.status("Fase 1: Analizando la consulta...", expanded=True) as status:
-                start_time = time.time()
-                analysis_prompt = f"Analiza esta consulta técnica. Identifica el objetivo principal, los conceptos clave y el formato de respuesta ideal. Consulta: {query}"
-                analysis = query_ollama(analysis_prompt, model_name)
-                st.markdown(f"**Resultado del Análisis:**\n\n{analysis}")
-                status.update(label="Fase 1 completada ", state="complete", expanded=False)
-            
-            # FASE 2: GENERACIÓN DE RESPUESTA
-            with st.status("Fase 2: Generando respuesta principal...", expanded=True) as status:
-                gen_prompt = f"Basándote en este análisis preliminar: '{analysis}', genera una respuesta detallada y precisa a la siguiente consulta: {query}"
-                draft_answer = query_ollama(gen_prompt, model_name)
-                st.markdown(f"**Borrador de Respuesta:**\n\n{draft_answer}")
-                status.update(label="Fase 2 completada ", state="complete", expanded=False)
-            
-            # FASE 3: REFINAMIENTO (VALOR AÑADIDO)
-            with st.status("Fase 3: Refinando y puliendo la respuesta...", expanded=True) as status:
-                refine_prompt = f"Revisa críticamente tu respuesta anterior: '{draft_answer}'. Corrige posibles imprecisiones, mejora la estructura y asegúrate de que sea lo más clara posible. Proporciona la versión FINAL pulida."
-                final_answer = query_ollama(refine_prompt, model_name)
-                st.markdown(f"**Proceso de Refinamiento:** Se han optimizado la estructura y claridad.")
-                status.update(label="Fase 3 completada ", state="complete", expanded=False)
-            
-            total_time = time.time() - start_time
-            
-            # RESULTADO FINAL
-            st.success(f"Procesamiento finalizado en {total_time:.2f} segundos.")
-            
-            st.subheader("Respuesta Final Optimizada")
-            st.markdown(f"<div class='step-container'>{final_answer}</div>", unsafe_allow_html=True)
-            
-            # Métrica de valor añadido
-            col1, col2 = st.columns(2)
-            col1.metric("Longitud (caracteres)", len(final_answer))
-            col2.metric("Mejora estimada", "25-30% vs respuesta simple")
+with st.sidebar:
+    st.header("Ajustes")
+    model_name = st.text_input("Modelo", "llama3.2")
+    st.info("💡 Este chatbot analiza y pule cada respuesta internamente antes de finalizar.")
+    if st.button("Limpiar Chat"):
+        st.session_state.messages = []
+        st.rerun()
 
-# Footer
-st.markdown("---")
-st.caption("Desarrollado para Lab_Exercises_3 - Procesamiento del Lenguaje Natural")
-#
+# Mostrar historial de mensajes
+for message in st.session_state.messages:
+    with st.chat_message(message["role"]):
+        st.markdown(message["content"])
+
+# Entrada de Usuario
+if prompt := st.chat_input("¿En qué puedo ayudarte hoy?"):
+    # Agregar mensaje del usuario al historial
+    st.session_state.messages.append({"role": "user", "content": prompt})
+    with st.chat_message("user"):
+        st.markdown(prompt)
+
+    # Lógica del Asistente con Pipeline
+    with st.chat_message("assistant"):
+        placeholder = st.empty()
+        full_response = ""
+        
+        # FASE 1: ANÁLISIS (Interno)
+        with st.status("Fase 1: Analizando contexto...", expanded=False) as status:
+            analysis_msg = [{"role": "user", "content": f"Analiza esta consulta en el contexto de nuestra charla: {prompt}. Responde con tu estrategia en una frase."}]
+            analysis = ""
+            for chunk in stream_ollama_chat(analysis_msg, model_name):
+                analysis += chunk
+            st.write(f"**Estrategia:** {analysis}")
+            status.update(label="Análisis completado ✅", state="complete")
+
+        # FASE 2: GENERACIÓN PRINCIPAL (Visible & Streaming)
+        with st.status("Fase 2: Redactando respuesta...", expanded=True) as status_gen:
+            # La generación principal usa st.session_state.messages (historial)
+            for chunk in stream_ollama_chat(st.session_state.messages, model_name):
+                full_response += chunk
+                placeholder.markdown(full_response + "▌")
+            
+            if not full_response:
+                full_response = "Lo siento, no he podido generar una respuesta ahora mismo."
+                
+            placeholder.markdown(full_response)
+            status_gen.update(label="Respuesta principal generada ✅", state="complete", expanded=False)
+        
+        # FASE 3: REFINAMIENTO (Post-procesamiento)
+        with st.expander("Fase 3: Ver optimización y notas"):
+            refine_msg = [{"role": "user", "content": f"Mejora ligeramente la estructura de esta respuesta (sin cambiar el sentido): {full_response}"}]
+            st.write_stream(stream_ollama_chat(refine_msg, model_name))
+
+    # Guardar respuesta del asistente en el historial
+    st.session_state.messages.append({"role": "assistant", "content": full_response})
