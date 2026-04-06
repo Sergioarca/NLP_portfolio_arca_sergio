@@ -82,7 +82,7 @@ if prompt := st.chat_input("¿En qué puedo ayudarte hoy?"):
             for chunk in stream_ollama_chat(analysis_msg, model_name):
                 analysis += chunk
             st.write(f"**Estrategia:** {analysis}")
-            status.update(label="Análisis completado ✅", state="complete")
+            status.update(label="Análisis completado ", state="complete")
 
         # FASE 2: GENERACIÓN PRINCIPAL (Visible & Streaming)
         with st.status("Fase 2: Redactando respuesta...", expanded=True) as status_gen:
