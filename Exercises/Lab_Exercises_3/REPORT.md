@@ -1,36 +1,44 @@
-# Informe de Desarrollo: Smart Chat Assistant (Lab_Exercises_3)
+# Development Report: Smart Chat Assistant (Lab_Exercises_3)
 
-Este documento detalla el proceso de diseño, implementación y optimización de la aplicación desarrollada para el ejercicio de laboratorio número 3 de la asignatura **Procesamiento del Lenguaje Natural**.
+This document details the design, implementation, and optimization process of the application developed for Laboratory Exercise 3 of the **Natural Language Processing** course.
 
-## 1. Objetivo del Proyecto
-El objetivo principal era construir un sistema de procesamiento de lenguaje natural completo que utilizara un modelo de lenguaje de gran tamaño (LLM) alojado localmente. La aplicación supera la interacción básica de "pregunta-respuesta" mediante un pipeline de razonamiento avanzado y refinamiento automático.
+## 1. Project Objective
+The main goal was to build a complete natural language processing system using a locally hosted Large Language Model (LLM). The application goes beyond basic "question-answer" interactions through an advanced reasoning and automatic refinement pipeline.
 
-## 2. Decisiones Técnicas y Optimización
+## 2. Technical Decisions and Optimization
 
-### Elección del Modelo Local
-Se ha seleccionado **Llama 3.2 (3B)** como motor principal:
-- **Optimización**: Se priorizó este modelo de 2GB frente a otros de 14GB para garantizar una latencia mínima y una ejecución fluida en hardware local.
-- **Rendimiento**: Permite realizar múltiples pasadas (análisis, borrador y refinamiento) en pocos segundos.
+### Local Model Selection
+**Llama 3.2 (3B)** was selected as the core engine:
+- **Optimization**: This 2GB model was prioritized over larger 14B models to ensure minimal latency and smooth execution on local hardware.
+- **Performance**: It allows for multiple processing passes (analysis, drafting, and refinement) within seconds.
 
-### Arquitectura de la Aplicación
-- **Interfaz**: Desarrollada con **Streamlit**, utilizando una estética oscura y componentes de chat nativos.
-- **Backend**: Comunicación directa con la API de Ollama mediante streaming HTTP.
+![Initial Setup and Model Info](First_Cap.png)
 
-## 3. Pipeline de Razonamiento (Valor Añadido)
+### Application Architecture
+- **Interface**: Developed with **Streamlit**, featuring a dark aesthetic and native chat components.
+- **Backend**: Direct communication with the Ollama API via HTTP streaming.
 
-La aplicación implementa una jerarquía de procesamiento que separa el "pensamiento" de la "respuesta final":
+## 3. Reasoning Pipeline (Added Value)
 
-### Fase de Pensamiento y Análisis (Interna)
-Cuando el usuario envía una consulta, el sistema activa un proceso interno visible mediante un estado de carga (" Pensando y Analizando..."):
-1.  **Análisis de Intención**: El modelo identifica la mejor estrategia para responder.
-2.  **Borrador Interno**: Se genera una primera versión de la respuesta basada en el historial de la conversación. Este borrador no se muestra directamente al usuario para evitar ruido visual.
+The application implements a processing hierarchy that separates "thinking" from the "final response":
 
-### Respuesta Final Inteligente (Refinamiento)
-Una vez concluido el pensamiento interno, el sistema ejecuta una **Fase de Refinamiento**. El modelo toma el borrador previo y lo pule para mejorar su claridad, estructura y precisión técnica. Esta versión refinada es la que se muestra en el chat y la que se guarda en la memoria del asistente.
+### Internal Thinking and Analysis Phase
+When a user sends a query, the system activates an internal process visible via a loading state ("Pensando y Analizando..."):
+1.  **Intent Analysis**: The model identifies the best strategy for responding.
+2.  **Internal Draft**: A first version of the response is generated based on the conversation history. This draft is kept internal to avoid visual noise.
 
-## 4. Gestión de Memoria y UX
-- **Contexto Persistente**: Se utiliza `st.session_state` para mantener el hilo de la conversación, pero solo almacenando las versiones refinadas de las respuestas para mantener la calidad del contexto.
-- **Streaming de Alta Calidad**: El usuario ve cómo se escribe la respuesta final en tiempo real, proporcionando una sensación de interactividad natural.
+### Smart Final Response (Refinement)
+Once the internal thinking is complete, the system executes a **Refinement Phase**. The model takes the previous draft and polishes it to improve clarity, structure, and technical accuracy. This refined version is what is shown in the chat and stored in the assistant's memory.
 
-## 5. Conclusión
-Este laboratorio demuestra cómo el postprocesamiento (refinamiento) puede transformar una respuesta genérica en una solución experta y bien estructurada, elevando la calidad de la interacción hombre-máquina sin necesidad de modelos masivamente pesados.
+![Pipeline Workflow and Expandable Details](Second_Cap.png)
+
+## 4. Memory Management and UX
+- **Persistent Context**: `st.session_state` is used to maintain the conversation thread, storing only the refined versions of the responses to maintain context quality.
+- **High-Quality Streaming**: Users see the final response being written in real-time, providing a natural interactive feel.
+
+## 5. Video Demonstration
+You can watch a full demonstration of the application, including the 3-phase pipeline and the user interface, by following this link:
+[Watch the Demonstration Video](https://drive.google.com/file/d/1oTFvFz0KDtoQXlAgy2kmM3DqKo7xeA4p/view?usp=sharing)
+
+## 6. Conclusion
+This laboratory demonstrates how post-processing (refinement) can transform a generic response into an expert, well-structured solution, enhancing the quality of human-machine interaction without the need for massive, heavy models.
