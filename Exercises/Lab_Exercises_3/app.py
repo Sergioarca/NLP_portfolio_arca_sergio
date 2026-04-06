@@ -3,7 +3,7 @@ import requests
 import json
 
 # Configuración premium de Streamlit
-st.set_page_config(page_title="Smart Chat Assistant", page_icon="💬", layout="wide")
+st.set_page_config(page_title="Smart Chat Assistant", layout="wide")
 
 st.markdown("""
 <style>
@@ -20,7 +20,7 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-st.title("💬 Smart Chat Assistant")
+st.title("Smart Chat Assistant")
 st.caption("Conversación con Pipeline Inteligente (Llama 3.2)")
 
 # Configuración de API
@@ -56,7 +56,7 @@ MODEL_NAME = "llama3.2"
 with st.sidebar:
     st.header("Info del Motor")
     st.write(f"**Modelo Activo:** `{MODEL_NAME}`")
-    st.info("💡 Este chatbot utiliza un pipeline de 3 fases: Análisis, Generación y Refinamiento.")
+    st.info("Este chatbot utiliza un pipeline de 3 fases: Análisis, Generación y Refinamiento.")
     if st.button("Limpiar Chat"):
         st.session_state.messages = []
         st.rerun()
@@ -90,7 +90,7 @@ if prompt := st.chat_input("¿En qué puedo ayudarte hoy?"):
             for chunk in stream_ollama_chat(st.session_state.messages, MODEL_NAME):
                 draft_result += chunk
             
-            status.update(label="Procesamiento completado ✅", state="complete", expanded=False)
+            status.update(label="Procesamiento completado", state="complete", expanded=False)
 
         # FASE 3: REFINAMIENTO Y RESPUESTA FINAL (Visible)
         if draft_result:

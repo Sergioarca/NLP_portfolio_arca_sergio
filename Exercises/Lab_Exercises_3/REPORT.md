@@ -21,7 +21,7 @@ Se ha seleccionado **Llama 3.2 (3B)** como motor principal:
 La aplicación implementa una jerarquía de procesamiento que separa el "pensamiento" de la "respuesta final":
 
 ### Fase de Pensamiento y Análisis (Interna)
-Cuando el usuario envía una consulta, el sistema activa un proceso interno visible mediante un estado de carga ("🧠 Pensando y Analizando..."):
+Cuando el usuario envía una consulta, el sistema activa un proceso interno visible mediante un estado de carga (" Pensando y Analizando..."):
 1.  **Análisis de Intención**: El modelo identifica la mejor estrategia para responder.
 2.  **Borrador Interno**: Se genera una primera versión de la respuesta basada en el historial de la conversación. Este borrador no se muestra directamente al usuario para evitar ruido visual.
 
