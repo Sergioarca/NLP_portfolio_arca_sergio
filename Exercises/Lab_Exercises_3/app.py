@@ -73,35 +73,44 @@ if prompt := st.chat_input("¿En qué puedo ayudarte hoy?"):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Lógica del Asistente con Pipeline Avanzado
+    # Lógica del Asistente con Pipeline Transparente
     with st.chat_message("assistant"):
-        # FASE DE PROCESAMIENTO (Interna)
-        # Combinamos el análisis y el borrador en un solo bloque de "pensamiento"
+        # FASE DE PROCESAMIENTO (Indicador visual)
         with st.status(" Pensando y Analizando...", expanded=False) as status:
             # 1. Análisis de Contexto
             st.write(" Analizando intención y contexto...")
             analysis_msg = [{"role": "user", "content": f"Analiza esta consulta brevemente: {prompt}. Responde qué pretendes hacer en una frase."}]
-            analysis = ""
+            analysis_result = ""
             for chunk in stream_ollama_chat(analysis_msg, MODEL_NAME):
-                analysis += chunk
-            st.write(f"**Estrategia:** {analysis}")
+                analysis_result += chunk
             
             # 2. Generación del Borrador
-            st.write("📝 Redactando borrador interno...")
-            draft_response = ""
+            st.write(" Redactando borrador interno...")
+            draft_result = ""
             for chunk in stream_ollama_chat(st.session_state.messages, MODEL_NAME):
-                draft_response += chunk
+                draft_result += chunk
             
             status.update(label="Procesamiento completado ✅", state="complete", expanded=False)
 
-        # FASE DE RESPUESTA FINAL (Visible & Refinada)
-        # La respuesta final que ve el usuario es el resultado del refinamiento (Fase 3)
-        if draft_response:
-            refine_msg = [{"role": "user", "content": f"Basado en este borrador y en nuestra charla, ofrece una respuesta final experta, clara y bien estructurada: {draft_response}"}]
+        # FASE 3: REFINAMIENTO Y RESPUESTA FINAL (Visible)
+        if draft_result:
+            refine_msg = [{"role": "user", "content": f"Basado en este borrador y en nuestra charla, ofrece una respuesta final experta, clara y bien estructurada: {draft_result}"}]
+            # La respuesta final que se ve en el chat es el refindo
             final_response = st.write_stream(stream_ollama_chat(refine_msg, MODEL_NAME))
         else:
             final_response = "Lo siento, no he podido generar una respuesta."
             st.error(final_response)
 
-    # Guardar SOLO la respuesta final refinada en el historial
+        # MOSTRAR DETALLES DEL PIPELINE (Desplegables solicitados)
+        st.divider()
+        with st.expander("Ver Detalles de la Fase 1: Análisis"):
+            st.write(analysis_result)
+        
+        with st.expander("Ver Detalles de la Fase 2: Borrador"):
+            st.write(draft_result)
+            
+        with st.expander("Ver Detalles de la Fase 3: Refinado"):
+            st.write(final_response)
+
+    # Guardar la respuesta final en el historial
     st.session_state.messages.append({"role": "assistant", "content": final_response})
