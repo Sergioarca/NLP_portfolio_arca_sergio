@@ -50,10 +50,13 @@ def stream_ollama_chat(messages, model):
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Configuración de Modelo (Fijo por rendimiento)
+MODEL_NAME = "llama3.2"
+
 with st.sidebar:
-    st.header("Ajustes")
-    model_name = st.text_input("Modelo", "llama3.2")
-    st.info("💡 Este chatbot analiza y pule cada respuesta internamente antes de finalizar.")
+    st.header("Info del Motor")
+    st.write(f"**Modelo Activo:** `{MODEL_NAME}`")
+    st.info("💡 Este chatbot utiliza un pipeline de 3 fases: Análisis, Generación y Refinamiento.")
     if st.button("Limpiar Chat"):
         st.session_state.messages = []
         st.rerun()
@@ -70,37 +73,35 @@ if prompt := st.chat_input("¿En qué puedo ayudarte hoy?"):
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # Lógica del Asistente con Pipeline
+    # Lógica del Asistente con Pipeline Avanzado
     with st.chat_message("assistant"):
-        placeholder = st.empty()
-        full_response = ""
-        
-        # FASE 1: ANÁLISIS (Interno)
-        with st.status("Fase 1: Analizando contexto...", expanded=False) as status:
-            analysis_msg = [{"role": "user", "content": f"Analiza esta consulta en el contexto de nuestra charla: {prompt}. Responde con tu estrategia en una frase."}]
+        # FASE DE PROCESAMIENTO (Interna)
+        # Combinamos el análisis y el borrador en un solo bloque de "pensamiento"
+        with st.status(" Pensando y Analizando...", expanded=False) as status:
+            # 1. Análisis de Contexto
+            st.write(" Analizando intención y contexto...")
+            analysis_msg = [{"role": "user", "content": f"Analiza esta consulta brevemente: {prompt}. Responde qué pretendes hacer en una frase."}]
             analysis = ""
-            for chunk in stream_ollama_chat(analysis_msg, model_name):
+            for chunk in stream_ollama_chat(analysis_msg, MODEL_NAME):
                 analysis += chunk
             st.write(f"**Estrategia:** {analysis}")
-            status.update(label="Análisis completado ", state="complete")
-
-        # FASE 2: GENERACIÓN PRINCIPAL (Visible & Streaming)
-        with st.status("Fase 2: Redactando respuesta...", expanded=True) as status_gen:
-            # La generación principal usa st.session_state.messages (historial)
-            for chunk in stream_ollama_chat(st.session_state.messages, model_name):
-                full_response += chunk
-                placeholder.markdown(full_response + "▌")
             
-            if not full_response:
-                full_response = "Lo siento, no he podido generar una respuesta ahora mismo."
-                
-            placeholder.markdown(full_response)
-            status_gen.update(label="Respuesta principal generada ✅", state="complete", expanded=False)
-        
-        # FASE 3: REFINAMIENTO (Post-procesamiento)
-        with st.expander("Fase 3: Ver optimización y notas"):
-            refine_msg = [{"role": "user", "content": f"Mejora ligeramente la estructura de esta respuesta (sin cambiar el sentido): {full_response}"}]
-            st.write_stream(stream_ollama_chat(refine_msg, model_name))
+            # 2. Generación del Borrador
+            st.write("📝 Redactando borrador interno...")
+            draft_response = ""
+            for chunk in stream_ollama_chat(st.session_state.messages, MODEL_NAME):
+                draft_response += chunk
+            
+            status.update(label="Procesamiento completado ✅", state="complete", expanded=False)
 
-    # Guardar respuesta del asistente en el historial
-    st.session_state.messages.append({"role": "assistant", "content": full_response})
+        # FASE DE RESPUESTA FINAL (Visible & Refinada)
+        # La respuesta final que ve el usuario es el resultado del refinamiento (Fase 3)
+        if draft_response:
+            refine_msg = [{"role": "user", "content": f"Basado en este borrador y en nuestra charla, ofrece una respuesta final experta, clara y bien estructurada: {draft_response}"}]
+            final_response = st.write_stream(stream_ollama_chat(refine_msg, MODEL_NAME))
+        else:
+            final_response = "Lo siento, no he podido generar una respuesta."
+            st.error(final_response)
+
+    # Guardar SOLO la respuesta final refinada en el historial
+    st.session_state.messages.append({"role": "assistant", "content": final_response})
