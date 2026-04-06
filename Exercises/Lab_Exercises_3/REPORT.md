@@ -1,4 +1,5 @@
 # Development Report: Smart Chat Assistant (Lab_Exercises_3)
+**Developed by: Sergio Arca Montenegro**
 
 This document details the design, implementation, and optimization process of the application developed for Laboratory Exercise 3 of the **Natural Language Processing** course.
 
