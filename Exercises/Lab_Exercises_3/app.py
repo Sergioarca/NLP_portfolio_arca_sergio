@@ -101,16 +101,20 @@ if prompt := st.chat_input("¿En qué puedo ayudarte hoy?"):
             final_response = "Lo siento, no he podido generar una respuesta."
             st.error(final_response)
 
-        # MOSTRAR DETALLES DEL PIPELINE (Desplegables solicitados)
+        # DETALLES TÉCNICOS DEL PIPELINE (3 Pasos)
         st.divider()
-        with st.expander("Ver Detalles de la Fase 1: Análisis"):
+        with st.expander("Fase 1: Análisis de Intención"):
+            st.info("**Estrategia detectada:**")
             st.write(analysis_result)
         
-        with st.expander("Ver Detalles de la Fase 2: Borrador"):
+        with st.expander("Fase 2: Borrador Inicial (Raw)"):
+            st.warning("**Respuesta original sin procesar:**")
             st.write(draft_result)
             
-        with st.expander("Ver Detalles de la Fase 3: Refinado"):
+        with st.expander("Fase 3: Refinamiento de Calidad"):
+            st.success("**Cambios y mejoras aplicados:**")
             st.write(final_response)
+            st.caption("Esta es la versión final que se ha guardado en la memoria de la conversación.")
 
     # Guardar la respuesta final en el historial
     st.session_state.messages.append({"role": "assistant", "content": final_response})
